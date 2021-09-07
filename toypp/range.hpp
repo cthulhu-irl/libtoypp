@@ -1,7 +1,6 @@
 #ifndef TOYPP_RANGE_HPP_
 #define TOYPP_RANGE_HPP_
 
-#include <iostream>
 #include <type_traits>
 #include <algorithm>
 #include <utility>
@@ -29,7 +28,7 @@ class RangeIterator final {
   {}
 
  public:
-  constexpr explicit RangeIterator(T init, T end, T step)
+  constexpr RangeIterator(T init, T end, T step)
     : iter_(init)
     , start_(std::move(init))
     , end_(std::move(end))
