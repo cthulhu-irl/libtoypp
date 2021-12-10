@@ -26,12 +26,12 @@ struct Matrix {
 
   array_type arr {};
 
-  constexpr auto& get(std::size_t n, std::size_t m) noexcept
+  constexpr auto& at(std::size_t n, std::size_t m) noexcept
   {
     return arr[n][m];
   }
 
-  constexpr const auto& get(std::size_t n, std::size_t m) const noexcept
+  constexpr const auto& at(std::size_t n, std::size_t m) const noexcept
   {
     return arr[n][m];
   }
@@ -88,7 +88,7 @@ struct Matrix {
   }
 
   template <typename U>
-  constexpr auto sum(Matrix<U, row_size, col_size> other) const noexcept
+  constexpr auto add(Matrix<U, row_size, col_size> other) const noexcept
   {
     for (auto i : Range<std::size_t>(0, row_size, 1))
       for (auto j : Range<std::size_t>(0, col_size, 1))
@@ -121,7 +121,7 @@ struct Matrix {
     for (auto i : Range<std::size_t>(0, rows, 1))
       for (auto j : Range<std::size_t>(0, cols, 1))
         for (auto k : Range<std::size_t>(0, mids, 1))
-          ret[i][k] += get(i, k) * other.get(k, j);
+          ret[i][k] += at(i, k) * other.get(k, j);
 
     return ret;
   }
@@ -183,6 +183,24 @@ struct Matrix {
         ret.get(i, j) = std::move(other.get(N1 + i, M1 + j));
 
     return ret;
+  }
+
+  template <typename U, std::size_t W, std::size_t H>
+  constexpr auto operator*(const Matrix<U, W, H>& other) const noexcept
+  {
+    return mul(other);
+  }
+
+  template <typename U>
+  constexpr auto operator+(const Matrix<U, N, M>& other) const noexcept
+  {
+    return add(other);
+  }
+
+  template <typename U>
+  constexpr auto operator-(const Matrix<U, N, M>& other) const noexcept
+  {
+    return sub(other);
   }
 };
 
