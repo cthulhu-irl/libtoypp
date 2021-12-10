@@ -5,6 +5,8 @@
 #include <algorithm>
 #include <utility>
 
+#include "math.hpp"
+
 namespace tpp {
 
 namespace detail {
@@ -40,7 +42,7 @@ class RangeIterator final {
     if (start_ >= end_)
       iter_ = end_;
 
-    else if (std::clamp(iter_ + step_, start_, end_) == start_)
+    else if (clamp(iter_ + step_, start_, end_) == start_)
       iter_ = end_;
   }
 
@@ -59,49 +61,49 @@ class RangeIterator final {
 
   constexpr iterator operator++()
   {
-    iter_ = std::clamp(iter_ + step_, start_, end_);
+    iter_ = clamp(iter_ + step_, start_, end_);
     return *this;
   }
 
   constexpr iterator operator++(int)
   {
     iterator tmp = *this;
-    iter_ = std::clamp(iter_ + step_, start_, end_);
+    iter_ = clamp(iter_ + step_, start_, end_);
     return tmp;
   }
 
   constexpr iterator operator--()
   {
-    iter_ = std::clamp(iter_ - step_, start_, end_);
+    iter_ = clamp(iter_ - step_, start_, end_);
     return *this;
   }
 
   constexpr iterator operator--(int)
   {
     iterator tmp = *this;
-    iter_ = std::clamp(iter_ - step_, start_, end_);
+    iter_ = clamp(iter_ - step_, start_, end_);
     return tmp;
   }
 
   constexpr iterator operator+(const iterator& other) const
   {
-    return std::clamp(iter_ + other * step_, start_, end_);
+    return clamp(iter_ + other * step_, start_, end_);
   }
 
   constexpr iterator operator-(const iterator& other) const
   {
-    return std::clamp(iter_ - other * step_, start_, end_);
+    return clamp(iter_ - other * step_, start_, end_);
   }
 
   constexpr iterator operator+=(const iterator& other)
   {
-    iter_ = std::clamp(iter_ + other * step_, start_, end_);
+    iter_ = clamp(iter_ + other * step_, start_, end_);
     return *this;
   }
 
   constexpr iterator operator-=(const iterator& other)
   {
-    iter_ = std::clamp(iter_ - other * step_, start_, end_);
+    iter_ = clamp(iter_ - other * step_, start_, end_);
     return *this;
   }
 
