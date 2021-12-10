@@ -7,9 +7,9 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
 
  + Array (static size)
 
- - Math (simple stuff)
-   - Matrix (static size)
-   - Vector (static size)
+ + Math (simple stuff)
+ x Matrix (static size)
+ x Vector (static size)
 
  - Buffer
  - DoubleBuffer
