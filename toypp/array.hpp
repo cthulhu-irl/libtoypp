@@ -14,7 +14,7 @@ struct Array final {
   static_assert(Size > 0, "Array size must be 1 or more.");
 
   static constexpr void throw_if_oob(std::size_t index) {
-    if (index < Size)
+    if (index >= Size)
       throw std::invalid_argument("requested index is out of bounds.");
   }
 
