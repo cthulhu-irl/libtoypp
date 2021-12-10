@@ -121,7 +121,7 @@ struct Matrix {
     for (auto i : Range<std::size_t>(0, rows, 1))
       for (auto j : Range<std::size_t>(0, cols, 1))
         for (auto k : Range<std::size_t>(0, mids, 1))
-          ret[i][k] += at(i, k) * other.get(k, j);
+          ret[i][k] += at(i, k) * other.at(k, j);
 
     return ret;
   }
@@ -146,7 +146,7 @@ struct Matrix {
 
     for (auto i : Range<std::size_t>(N1, N2, 1))
       for (auto j : Range<std::size_t>(M1, M2, 1))
-        ret.get(i, j) = std::move(arr[i][j]);
+        ret.at(i, j) = std::move(arr[i][j]);
 
     return ret;
   }
@@ -180,7 +180,7 @@ struct Matrix {
 
     for (auto i : Range<std::size_t>(0, rows, 1))
       for (auto j : Range<std::size_t>(0, cols, 1))
-        ret.get(i, j) = std::move(other.get(N1 + i, M1 + j));
+        ret.at(i, j) = std::move(other.at(N1 + i, M1 + j));
 
     return ret;
   }
