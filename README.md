@@ -17,7 +17,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [ ] TripleBuffer
  - [ ] RingBuffer
 
- - [ ] UniquePtr
+ - [x] UniquePtr
  - [ ] SharedPtr
 
  - [ ] VariantArray (static size, dynamically allocated)
