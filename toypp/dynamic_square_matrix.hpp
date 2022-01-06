@@ -7,6 +7,11 @@
 #include <utility>
 #include <vector>
 
+/** A Dynamicall Allocated Only Square Shape Matrix
+ *  that is suitable for resizing so much...
+ *
+ *  NOTE: its linear indexing is different, see `index` private function.
+ */
 template <typename T, typename Vector = std::vector<T>>
 class DynamicSquareMatrix {
   Vector      vec_;
@@ -31,14 +36,12 @@ class DynamicSquareMatrix {
 
   constexpr T& at(std::size_t n, std::size_t m)
   {
-    // why the fuck there is no std::optional<T&>?
     // if (size <= n || size <= m) return std::nullopt;
     return vec_[index(n, m)];
   }
 
   constexpr const T& at(std::size_t n, std::size_t m) const
   {
-    // why the fuck there is no std::optional<const T&>?
     // if (size <= n || size <= m) return std::nullopt;
     return vec_[index(n, m)];
   }
@@ -56,9 +59,11 @@ class DynamicSquareMatrix {
   {
     DynamicSquareMatrix ret(n);
 
-    std::size_t idx = 0;
-    for (const auto& value : *this)
-      *(ret.begin() + idx) = value;
+    auto iter = ret.begin();
+    for (const auto& value : *this) {
+      *iter = value;
+      ++iter;
+    }
 
     return ret;
   }
