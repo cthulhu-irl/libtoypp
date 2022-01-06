@@ -36,7 +36,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [ ] ConfigManager
  - [ ] HookSystem / Facade
 
- - [ ] Functional
+ - Functional
   - [ ] Maybe (something like std::optional)
   - [ ] Either (something like tl::expected)
   - [ ] Compose
