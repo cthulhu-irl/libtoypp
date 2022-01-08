@@ -147,6 +147,19 @@ struct Vector {
     return ret;
   }
 
+  template <typename U>
+  constexpr auto dot(Vector<U, N> other) const noexcept
+  {
+    using item_type = decltype(std::declval<T>() * std::declval<U>());
+
+    item_type ret = 0;
+
+    for (auto i : Range<std::size_t>(0, size(), 1))
+      ret += at(i) * std::move(other.at(i));
+
+    return ret;
+  }
+
   constexpr auto operator-() const { return neg(); }
 
   template <typename U>
