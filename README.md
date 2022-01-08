@@ -9,7 +9,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
 
  - [x] Math (simple stuff)
  - [ ] Matrix (static size)
- - [ ] Vector (static size)
+ - [x] Vector (static size)
  - [x] Dynamic Square Matrix (n * n)
 
  - [ ] Buffer
