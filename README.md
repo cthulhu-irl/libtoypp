@@ -8,7 +8,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [x] Array (static size)
 
  - [x] Math (simple stuff)
- - [ ] Matrix (static size)
+ - [x] Matrix (static size)
  - [x] Vector (static size)
  - [x] Dynamic Square Matrix (n * n)
 
