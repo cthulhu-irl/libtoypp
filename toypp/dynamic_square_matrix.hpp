@@ -1,5 +1,5 @@
-#ifndef DYNAMIC_SQUARE_MATRIX_HPP_
-#define DYNAMIC_SQUARE_MATRIX_HPP_
+#ifndef TOYPP_DYNAMIC_SQUARE_MATRIX_HPP_
+#define TOYPP_DYNAMIC_SQUARE_MATRIX_HPP_
 
 #include <cstddef>
 #include <cmath>
@@ -7,7 +7,9 @@
 #include <utility>
 #include <vector>
 
-/** A Dynamicall Allocated Only Square Shape Matrix
+namespace tpp {
+
+/** A Dynamically Allocated Only Square Shape Matrix
  *  that is suitable for resizing so much...
  *
  *  NOTE: its linear indexing is different, see `index` private function.
@@ -23,10 +25,7 @@ class DynamicSquareMatrix {
   constexpr explicit DynamicSquareMatrix() {}
   constexpr explicit DynamicSquareMatrix(std::size_t n) { resize(n); }
 
-  constexpr std::size_t size()     const noexcept { return size_;     }
-
-  constexpr std::size_t width()  const noexcept { return size_; }
-  constexpr std::size_t height() const noexcept { return size_; }
+  constexpr std::size_t size() const noexcept { return size_; }
 
   constexpr void resize(std::size_t n, T value = T())
   {
@@ -36,44 +35,67 @@ class DynamicSquareMatrix {
 
   constexpr T& at(std::size_t n, std::size_t m)
   {
-    // if (size <= n || size <= m) return std::nullopt;
+    // assert(size() <= n || size() <= m);
+
     return vec_[index(n, m)];
   }
 
   constexpr const T& at(std::size_t n, std::size_t m) const
   {
-    // if (size <= n || size <= m) return std::nullopt;
+    // assert(size() <= n || size() <= m);
+
     return vec_[index(n, m)];
   }
 
-  // the iteration order won't be same as other matrices...
+  constexpr void add_rowcol(std::size_t count, T value = T())
+  {
+    resize(size() + count, std::move(value));
+  }
+
+  constexpr void pop_rowcol(std::size_t x)
+  {
+    std::size_t base = x * x; // index(0, x)
+    // L is 2*x + intersectioned 1
+    // also for each rowcol there are 2 removals: index(n, x) and index(x, n)
+    std::size_t delcount = (2*x + 1) + 2*(size() - (x+1));
+    std::size_t end = vec_.size() - delcount;
+
+    std::size_t srcidx = (x+1)*(x+1) - 1 + (x == 0); // index(0, x+1) - 1
+
+    std::size_t n = x;
+
+    for (std::size_t dstidx = base; dstidx < end; ++dstidx) {
+      n += dstidx >= (n*n); // current rowcol
+
+      // skip index(n, x) or index(x, n)
+      ++srcidx;
+      srcidx += (srcidx == (n*n + x)) | (srcidx == (n*n + n + x));
+
+      vec_[dstidx] = std::move(vec_[srcidx]);
+    }
+
+    resize(size() - 1);
+  }
+
+  // NOTE: the iteration order won't be same as other matrices...
   // idx != (i * width + j)
+  // idx == max(i,j)*max(i,j) + (max(i,j) == j) * i + j
 
   constexpr auto begin() { return std::begin(vec_); }
   constexpr auto end()   { return std::end(vec_);   }
 
+  constexpr const auto begin() const { return std::begin(vec_); }
+  constexpr const auto end()   const { return std::end(vec_);   }
+
   constexpr const auto cbegin() const { return std::cbegin(vec_); }
   constexpr const auto cend()   const { return std::cend(vec_);   }
 
-  constexpr DynamicSquareMatrix subset(std::size_t n) const
-  {
-    DynamicSquareMatrix ret(n);
-
-    auto iter = ret.begin();
-    for (const auto& value : *this) {
-      *iter = value;
-      ++iter;
-    }
-
-    return ret;
-  }
-
-  constexpr T& operator()(std::size_t n, std::size_t m)
+  constexpr auto operator()(std::size_t n, std::size_t m)
   {
     return at(n, m);
   }
 
-  constexpr const T& operator()(std::size_t n, std::size_t m) const
+  constexpr auto operator()(std::size_t n, std::size_t m) const
   {
     return at(n, m);
   }
@@ -99,4 +121,6 @@ class DynamicSquareMatrix {
   }
 };
 
-#endif  // DYNAMIC_SQUARE_MATRIX_HPP_
+}  // namespace tpp
+
+#endif  // TOYPP_DYNAMIC_SQUARE_MATRIX_HPP_
