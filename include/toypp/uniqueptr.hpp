@@ -2,6 +2,7 @@
 #define TOYPP_UNIQUEPTR_HPP_
 
 #include <cstddef>
+#include <cstdio>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -20,17 +21,14 @@ constexpr static bool is_defaultable_deleter =
 template <typename T, typename Deleter = std::default_delete<T>>
 class UniquePtr {
  public:
-  using value_type = std::remove_reference_t<std::decay_t<T>>;
-  using pointer_type = value_type*;
-  using const_pointer_type = const value_type*;
-  using reference_type = value_type&;
-  using const_reference_type = const value_type&;
+  using value_type = std::remove_reference_t<T>;
 
+  using pointer = std::add_pointer_t<value_type>;
   using element_type = value_type;
   using deleter_type = Deleter;
 
  private:
-  pointer_type ptr_ = nullptr;
+  pointer ptr_ = nullptr;
   deleter_type deleter_{};
 
  public:
@@ -47,29 +45,60 @@ class UniquePtr {
   template <typename DeleterA = Deleter,
             std::enable_if_t<
               detail::is_defaultable_deleter<DeleterA>, bool> = true>
-  constexpr explicit UniquePtr(pointer_type ptr) noexcept : ptr_(ptr) {}
+  constexpr explicit UniquePtr(pointer ptr) noexcept : ptr_(ptr) {}
+
+  template <typename DeleterA = Deleter,
+            std::enable_if_t<
+              !(std::is_const<DeleterA>::value
+                  && std::is_lvalue_reference<DeleterA>::value)
+              && std::is_constructible<Deleter, Deleter>::value,
+              bool> = true>
+  constexpr UniquePtr(pointer ptr, const Deleter& deleter) noexcept
+    : ptr_(ptr)
+    , deleter_(deleter)
+  {}
 
   template <typename DeleterA = Deleter,
             std::enable_if_t<
               !std::is_reference<DeleterA>::value
               && std::is_nothrow_move_constructible<Deleter>::value,
-              bool
-            > = true
-           >
-  constexpr UniquePtr(pointer_type ptr, Deleter&& deleter) noexcept
+              bool> = true>
+  constexpr UniquePtr(pointer ptr, Deleter& deleter) noexcept
     : ptr_(ptr)
-    , deleter_(std::move(deleter))
+    , deleter_(deleter)
   {}
 
-  constexpr UniquePtr(pointer_type ptr, deleter_type deleter) noexcept
+  template <typename DeleterA = Deleter,
+            std::enable_if_t<
+              std::is_reference<DeleterA>::value
+              && std::is_constructible<Deleter, Deleter>::value,
+              bool> = true>
+  constexpr UniquePtr(
+      pointer ptr,
+      std::remove_reference_t<Deleter>&& deleter) noexcept = delete;
+
+  template <typename DeleterA = Deleter,
+            std::enable_if_t<
+              !std::is_reference<DeleterA>::value
+              && std::is_constructible<Deleter, Deleter&&>::value,
+              bool> = true>
+  constexpr UniquePtr(pointer ptr, Deleter&& deleter) noexcept
     : ptr_(ptr)
-    , deleter_(std::move(deleter))
+    , deleter_(std::forward<Deleter>(deleter))
   {}
 
-  constexpr UniquePtr(UniquePtr&& other) noexcept
-    : ptr_(std::exchange(other.ptr_, nullptr))
-    , deleter_(std::exchange(std::move(other.deleter_), deleter_type()))
-  {}
+  template <typename U, typename E,
+            std::enable_if_t<
+              std::is_convertible<
+                typename UniquePtr<U, E>::pointer, pointer>::value
+              && !std::is_array<U>::value
+              && std::is_nothrow_constructible<Deleter, E>::value,
+              bool> = true>
+  constexpr UniquePtr& operator=(UniquePtr<U, E>&& other) noexcept
+  {
+    ptr_ = other.release();
+    deleter_ = std::exchange(deleter_, std::forward<E>(other.deleter_));
+  }
 
   template <typename DeleterA = Deleter,
             std::enable_if_t<
@@ -87,99 +116,52 @@ class UniquePtr {
     return *this;
   }
 
-  template <typename DeleterA = Deleter,
+  template <typename U, typename E,
             std::enable_if_t<
-              !std::is_reference<DeleterA>::value
-              && std::is_constructible<DeleterA, DeleterA>::value,
+              !std::is_array<U>::value
+              && std::is_convertible<
+                    typename UniquePtr<U, E>::pointer, pointer>::value
+              && std::is_constructible<Deleter, E>::value,
               bool> = true>
-  constexpr UniquePtr(pointer_type ptr, const Deleter& deleter) noexcept
-    : ptr_(ptr)
-    , deleter_(deleter)
-  {}
-
-  template <typename DeleterA = Deleter,
-            std::enable_if_t<
-              !std::is_reference<DeleterA>::value
-              && std::is_constructible<DeleterA, DeleterA>::value,
-              bool> = true>
-  constexpr UniquePtr(pointer_type ptr, Deleter&& deleter) noexcept
-    : ptr_(ptr)
-    , deleter_(std::move(deleter))
-  {}
-
-  template <typename DeleterA = Deleter,
-            std::enable_if_t<
-              !std::is_const<DeleterA>::value
-              && std::is_lvalue_reference<DeleterA>::value
-              && std::is_constructible<DeleterA,
-                    std::remove_reference_t<DeleterA>>::value,
-              bool> = true>
-  constexpr UniquePtr(pointer_type ptr,
-                      std::remove_reference_t<Deleter>& deleter) noexcept
-    : ptr_(ptr)
-    , deleter_(deleter)
-  {}
-
-  template <typename DeleterA = Deleter,
-            std::enable_if_t<
-              std::is_const<DeleterA>::value
-              && std::is_lvalue_reference<DeleterA>::value
-              && std::is_constructible<DeleterA,
-                    std::remove_reference_t<DeleterA>>::value,
-              bool> = true>
-  constexpr UniquePtr(pointer_type ptr,
-                      const std::remove_reference_t<Deleter>& deleter) noexcept
-    : ptr_(ptr)
-    , deleter_(deleter)
-  {}
-
-  template <typename DeleterA = Deleter,
-            std::enable_if_t<
-              std::is_reference<DeleterA>::value
-              && std::is_constructible<DeleterA,
-                    std::remove_reference_t<DeleterA>>::value,
-              bool> = true>
-  constexpr UniquePtr(
-        pointer_type ptr,
-        std::remove_reference_t<Deleter>&& deleter) noexcept = delete;
-
-  template <typename U, typename E>
   constexpr UniquePtr(UniquePtr<U, E>&& other) noexcept
-    : UniquePtr(other.release(), std::forward<E>(other.deleter_))
+    : ptr_(std::exchange(other.ptr_, nullptr))
+    , deleter_(std::exchange(other.deleter_, deleter_type{}))
   {}
 
   template <typename U, typename E,
             std::enable_if_t<
-              std::is_nothrow_constructible<Deleter, E>::value,
+              !std::is_array<U>::value
+              && std::is_convertible<
+                    typename UniquePtr<U, E>::pointer, pointer>::value
+              && std::is_constructible<Deleter, E>::value,
               bool> = true>
-  constexpr UniquePtr& operator=(UniquePtr<U, E>&& other) noexcept
-  {
-    ptr_ = other.release();
-    deleter_ = std::exchange(deleter_, std::move(other.deleter_));
-  }
-
-  template <typename U, typename E>
   constexpr UniquePtr(const UniquePtr<U, E>&) noexcept = delete;
   constexpr UniquePtr(const UniquePtr&) noexcept = delete;
 
-  template <typename U, typename E>
+  template <typename U, typename E,
+            std::enable_if_t<
+              !std::is_array<U>::value
+              && std::is_convertible<
+                    typename UniquePtr<U, E>::pointer, pointer>::value
+              && std::is_constructible<Deleter, E>::value,
+              bool> = true>
   constexpr UniquePtr& operator=(const UniquePtr<U, E>&) noexcept = delete;
   constexpr UniquePtr& operator=(const UniquePtr&) noexcept = delete;
 
   ~UniquePtr() noexcept { deleter_(ptr_); }
 
-  constexpr pointer_type release() noexcept
+  constexpr pointer release() noexcept
   {
     return std::exchange(ptr_, nullptr);
   }
 
-  constexpr void reset(pointer_type other = nullptr) noexcept
+  constexpr void reset(pointer other = nullptr) noexcept
   {
     auto old = std::exchange(ptr_, other);
     if (old) deleter_(old);
   }
 
-  constexpr void swap(pointer_type ptr) noexcept { std::swap(ptr_, ptr); }
+  constexpr void swap(pointer ptr) noexcept { std::swap(ptr_, ptr); }
   constexpr void swap(UniquePtr& other) noexcept
   {
     std::swap(ptr_, other.ptr_);
@@ -217,8 +199,8 @@ class UniquePtr {
     return std::move(*ptr_);
   }
 
-  constexpr pointer_type operator->() noexcept { return ptr_; }
-  constexpr const_pointer_type operator->() const noexcept { return ptr_; }
+  constexpr pointer operator->() noexcept { return ptr_; }
+  constexpr const pointer operator->() const noexcept { return ptr_; }
 
   constexpr bool operator==(const UniquePtr& other) const noexcept
   {
