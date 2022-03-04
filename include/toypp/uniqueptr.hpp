@@ -182,16 +182,6 @@ class UniquePtr {
     return std::move(deleter_);
   }
 
-  constexpr auto& operator[](std::size_t index) noexcept
-  {
-    return ptr_[index];
-  }
-
-  constexpr const auto& operator[](std::size_t index) const noexcept
-  {
-    return ptr_[index];
-  }
-
   constexpr auto&  operator*() &  noexcept { return *ptr_; }
   constexpr const auto& operator*() const& noexcept { return *ptr_;  }
 
