@@ -32,8 +32,11 @@ TEST_CASE("[tpp::uniqueptr]")
   tpp::UniquePtr<int, MyDeleter<int>&> d(valptr, my_deleter);
   tpp::UniquePtr<int, const MyDeleter<int>&> e(valptr, my_deleter);
 
-// this must yield error of call to deleted constructor:
-//  tpp::UniquePtr<int, MyDeleter<int>&> f(valptr, std::move(my_deleter));
+  static_assert(
+      !std::is_constructible<
+        tpp::UniquePtr<int, MyDeleter<int>&>, int*, MyDeleter<int>&&>::value,
+      "rvalue deleter ref for non-const Deleter ref must be deleted."
+  );
 
   tpp::UniquePtr<int, MyDeleter<int>> g(valptr, std::move(my_deleter));
 
@@ -49,4 +52,15 @@ TEST_CASE("[tpp::uniqueptr]")
   REQUIRE(*e == val);
   REQUIRE(*g == val);
   REQUIRE(*x == 24);
+
+  static_assert(
+      std::is_constructible<decltype(a), decltype(std::move(a))>::value);
+  static_assert(
+      std::is_constructible<decltype(b), decltype(std::move(b))>::value);
+  static_assert(
+      std::is_constructible<decltype(c), decltype(std::move(c))>::value);
+  static_assert(
+      std::is_constructible<decltype(d), decltype(std::move(d))>::value);
+  static_assert(
+      std::is_constructible<decltype(e), decltype(std::move(e))>::value);
 }

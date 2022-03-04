@@ -137,6 +137,7 @@ class UniquePtr {
               bool> = true>
   constexpr UniquePtr(const UniquePtr<U, E>&) noexcept = delete;
   constexpr UniquePtr(const UniquePtr&) noexcept = delete;
+  constexpr UniquePtr(UniquePtr&&) noexcept = default;
 
   template <typename U, typename E,
             std::enable_if_t<
@@ -147,6 +148,7 @@ class UniquePtr {
               bool> = true>
   constexpr UniquePtr& operator=(const UniquePtr<U, E>&) noexcept = delete;
   constexpr UniquePtr& operator=(const UniquePtr&) noexcept = delete;
+  constexpr UniquePtr& operator=(UniquePtr&&) noexcept = default;
 
   ~UniquePtr() noexcept { deleter_(ptr_); }
 
