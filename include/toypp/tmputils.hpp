@@ -22,9 +22,6 @@ struct type_pack<> {
 
   template <template <typename ...> typename Template, typename ...Us>
   using rexpand_into = Template<Us...>;
-
-  template <typename ...Us>
-  using zip_with = type_pack<Us...>;
 };
 
 template <typename T, typename ...Ts>
@@ -39,6 +36,41 @@ struct type_pack<T, Ts...> {
   using rexpand_into = Template<Us..., Ts...>;
 
   constexpr static auto count = sizeof...(Ts);
+  constexpr static auto size() noexcept { return count; }
+};
+
+// -- value_pack
+
+template <auto ...Xs>
+struct value_pack {};
+
+template <>
+struct value_pack<> {
+  using rest = value_pack<>;
+
+  constexpr static auto count = 0;
+  constexpr static auto size() noexcept { return count; }
+
+  template <template <auto ...> typename Template, auto ...Ys>
+  using expand_into = Template<Ys...>;
+
+  template <template <auto ...> typename Template, auto ...Ys>
+  using rexpand_into = Template<Ys...>;
+};
+
+template <auto X, auto ...Xs>
+struct value_pack<X, Xs...> {
+  constexpr static auto first = X;
+
+  using rest = value_pack<Xs...>;
+
+  template <template <auto ...> typename Template, auto ...Ys>
+  using expand_into = Template<Xs..., Ys...>;
+
+  template <template <auto ...> typename Template, auto ...Ys>
+  using rexpand_into = Template<Ys..., Xs...>;
+
+  constexpr static auto count = sizeof...(Xs);
   constexpr static auto size() noexcept { return count; }
 };
 
@@ -92,7 +124,61 @@ struct type_pack_zip<PackA, PackB, PackC, Packs...> {
 };
 
 template <typename ...Packs>
-using type_pack_zip_t = typename type_pack<Packs...>::type;
+using type_pack_zip_t = typename type_pack_zip<Packs...>::type;
+
+// -- value_pack_zip
+
+namespace detail {
+
+template <auto ...Xs>
+struct value_pack_zip {};
+
+template <auto X, auto ...Xs>
+struct value_pack_zip<X, Xs...> {
+  template <auto ...Ys>
+  struct with { using type = value_pack<X, Xs...>; };
+
+  template <auto Y, auto ...Ys>
+  struct with<Y, Ys...> {
+    using rest = typename value_pack_zip<Xs...>::template with<Ys...>::type;
+    using type = typename rest::template rexpand_into<X, Y>;
+  };
+};
+
+template <typename PackA, typename PackB>
+struct value_pack_zip_two {
+  using zipper =
+    typename PackA::template expand_into<detail::value_pack_zip>;
+
+  using type =
+    typename PackB::template expand_into<typename zipper::with>::type;
+};
+
+}  // namespace detail
+
+template <typename ...Packs>
+struct value_pack_zip {
+  using type = value_pack<>;
+};
+
+template <typename Pack>
+struct value_pack_zip<Pack> { using type = Pack; };
+
+template <typename PackA, typename PackB>
+struct value_pack_zip<PackA, PackB> {
+  using type = typename detail::value_pack_zip_two<PackA, PackB>::type;
+};
+
+template <typename PackA, typename PackB, typename PackC, typename ...Packs>
+struct value_pack_zip<PackA, PackB, PackC, Packs...> {
+  using tmppack1 = typename detail::value_pack_zip_two<PackA, PackB>::type;
+  using tmppack2 = typename detail::value_pack_zip_two<tmppack1, PackC>::type;
+
+  using type = typename value_pack_zip<tmppack2, Packs...>::type;
+};
+
+template <typename ...Packs>
+using value_pack_zip_t = typename value_pack_zip<Packs...>::type;
 
 // -- pack_pick_first
 
