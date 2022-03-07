@@ -2,6 +2,7 @@
 #define TOYPP_TMPUTILS_HPP_
 
 #include <cstdint>
+#include <type_traits>
 
 namespace tpp {
 
@@ -38,6 +39,28 @@ struct type_pack<T, Ts...> {
   constexpr static auto count = sizeof...(Ts);
   constexpr static auto size() noexcept { return count; }
 };
+
+// -- type_pack_mix
+
+template <typename ...Packs>
+struct type_pack_mix {
+  using type = type_pack<>;
+};
+
+template <typename Pack>
+struct type_pack_mix<Pack> {
+  using type = Pack;
+};
+
+template <typename PackA, typename PackB, typename ...Packs>
+struct type_pack_mix<PackA, PackB, Packs...> {
+
+  using type = typename PackB::template expand_into<
+                  typename PackA::expand_into, type_pack>;
+};
+
+template <typename ...Packs>
+using type_pack_mix_t = typename type_pack_mix<Packs...>::type;
 
 // -- value_pack
 
@@ -227,6 +250,70 @@ struct pack_count { constexpr static auto value = sizeof...(Ts); };
 
 template <typename ...Ts>
 constexpr inline auto pack_count_v = sizeof...(Ts);
+
+// -- pack_pick_best
+
+template <template <typename, typename> typename Compare,
+          typename ...Ts>
+struct pack_pick_best {};
+
+template <template <typename, typename> typename Compare,
+          typename T>
+struct pack_pick_best<Compare, T> {
+  using type = T;
+};
+
+template <template <typename, typename> typename Compare,
+          typename A,
+          typename B,
+          typename ...Rest>
+struct pack_pick_best<Compare, A, B, Rest...> {
+  using best_sofar = typename Compare<A, B>::type;
+
+  using type = typename pack_pick_best<Compare, best_sofar, Rest...>::type;
+};
+
+template <template <typename, typename> typename Compare, typename ...Ts>
+using pack_pick_best_t = typename pack_pick_best<Compare, Ts...>::type;
+
+// -- pack_filter
+
+template <template <typename> typename Selector,
+          typename ...Ts>
+struct pack_filter {
+  using type = type_pack<>;
+};
+
+template <template <typename> typename Selector,
+          typename T,
+          typename ...Ts>
+struct pack_filter<Selector, T, Ts...> {
+  using first =
+    std::conditional_t<Selector<T>::value, type_pack<T>, type_pack<>>;
+
+  using rest = typename pack_filter<Selector, Ts...>::type;
+
+  using type = typename type_pack_mix<first, rest>::type;
+};
+
+template <template <typename> typename Selector, typename ...Ts>
+using pack_filter_t = typename pack_filter<Selector, Ts...>::type;
+
+// -- pack_pick_max_size
+
+template <typename ...Ts>
+struct pack_pick_max_size {};
+
+template <typename T, typename ...Ts>
+struct pack_pick_max_size<T, Ts...> {
+  template <typename A, typename B>
+  using max_size_type = std::conditional<sizeof(A) >= sizeof(B), A, B>;
+
+  using type = typename pack_pick_best<max_size_type, T, Ts...>::type;
+};
+
+template <typename ...Ts>
+using pack_pick_max_size_t = typename pack_pick_max_size<Ts...>::type;
 
 }  // namespace tpp
 
