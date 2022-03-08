@@ -315,6 +315,46 @@ struct pack_pick_max_size<T, Ts...> {
 template <typename ...Ts>
 using pack_pick_max_size_t = typename pack_pick_max_size<Ts...>::type;
 
+// -- pack_commutative_binary_compliance
+
+template <template <typename, typename> typename BinaryOp,
+          typename ...Ts>
+struct pack_commutative_binary_compliance : std::true_type {};
+
+template <template <typename, typename> typename BinaryOp,
+          typename T,
+          typename U>
+struct pack_commutative_binary_compliance<BinaryOp, T, U>
+  : std::bool_constant<BinaryOp<T, U>::value> {};
+
+template <template <typename, typename> typename BinaryOp,
+          typename T,
+          typename ...Ts>
+struct pack_commutative_binary_compliance<BinaryOp, T, Ts...> {
+  constexpr static bool value =
+    (true && ... && (BinaryOp<T, Ts>::value))
+    && pack_commutative_binary_compliance<BinaryOp, Ts...>::value;
+};
+
+template <template <typename, typename> typename BinaryOp,
+          typename ...Ts>
+constexpr inline bool pack_commutative_binary_compliance_v =
+  pack_commutative_binary_compliance<BinaryOp, Ts...>::value;
+
+// -- pack_is_unique
+
+template <typename ...Ts>
+struct pack_is_unique {
+  template <typename A, typename B>
+  using is_not_same = std::negation<std::is_same<A, B>>;
+
+  constexpr static bool value =
+    pack_commutative_binary_compliance_v<is_not_same, Ts...>;
+};
+
+template <typename ...Ts>
+constexpr inline bool pack_is_unique_v = pack_is_unique<Ts...>::value;
+
 }  // namespace tpp
 
 #endif  // TOYPP_TMPUTILS_HPP_
