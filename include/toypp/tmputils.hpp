@@ -431,12 +431,18 @@ struct pack_has_match {
   constexpr static bool value = (false || ... || Pred<Ts>::value);
 };
 
+template <template <typename> typename Pred, typename ...Ts>
+constexpr inline bool pack_has_match_v = pack_has_match<Pred, Ts...>::value;
+
 // -- pack_does_contain
 
 template <typename A, typename ...Ts>
 struct pack_does_contain {
   constexpr static bool value = (false || ... || std::is_same_v<A, Ts>);
 };
+
+template <typename A, typename ...Ts>
+constexpr inline bool pack_does_contain_v = pack_does_contain<A, Ts...>::value;
 
 }  // namespace tpp
 
