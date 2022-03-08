@@ -6,6 +6,57 @@
 
 namespace tpp {
 
+// -- basic tag types
+
+struct not_found_t {};
+
+// -- identity_type / identity_value
+
+template <typename T>
+struct identity_type { using type = T; };
+
+template <auto X>
+struct identity_value { constexpr static auto value = X; };
+
+template <typename T>
+using identity_t = typename identity_type<T>::type;
+
+template <auto X>
+constexpr inline auto identity_v = X;
+
+// -- always_type / always_value
+
+template <typename T, typename U>
+struct always_type { using type = T; };
+
+template <auto X, auto Y>
+struct always_value { constexpr static auto value = X; };
+
+template <typename T, typename U>
+using always_t = typename always_type<T, U>::type;
+
+template <auto X, auto Y>
+constexpr inline auto always_v = X;
+
+// -- unalias_template
+
+template <template <typename ...> typename Template, typename ...Ts>
+struct unalias_template {
+  template <typename ...Us>
+  struct unaliased { using type = Template<Ts..., Us...>; };
+
+  template <typename ...Us>
+  struct unaliased_r { using type = Template<Ts..., Us...>; };
+
+  template <typename ...Us>
+  using unaliased_r_t = typename unaliased<Us...>::type;
+
+  template <typename ...Us>
+  using unaliased_t = typename unaliased<Us...>::type;
+
+  using type = Template<Ts...>;
+};
+
 // -- type_pack
 
 template <typename ...Ts>
@@ -299,6 +350,24 @@ struct pack_filter<Selector, T, Ts...> {
 template <template <typename> typename Selector, typename ...Ts>
 using pack_filter_t = typename pack_filter<Selector, Ts...>::type;
 
+// -- pack_find_match
+
+template <template <typename> typename Pred,
+          typename ...Ts>
+struct pack_find_match {
+  using type = not_found_t;
+};
+
+template <template <typename> typename Pred,
+          typename T,
+          typename ...Ts>
+struct pack_find_match<Pred, T, Ts...> {
+  using type =
+    std::conditional_t<Pred<T>::value,
+                       T,
+                       typename pack_find_match<Pred, Ts...>::type>;
+};
+
 // -- pack_pick_max_size
 
 template <typename ...Ts>
@@ -317,29 +386,29 @@ using pack_pick_max_size_t = typename pack_pick_max_size<Ts...>::type;
 
 // -- pack_commutative_binary_compliance
 
-template <template <typename, typename> typename BinaryOp,
+template <template <typename, typename> typename BinaryPred,
           typename ...Ts>
 struct pack_commutative_binary_compliance : std::true_type {};
 
-template <template <typename, typename> typename BinaryOp,
+template <template <typename, typename> typename BinaryPred,
           typename T,
           typename U>
-struct pack_commutative_binary_compliance<BinaryOp, T, U>
-  : std::bool_constant<BinaryOp<T, U>::value> {};
+struct pack_commutative_binary_compliance<BinaryPred, T, U>
+  : std::bool_constant<BinaryPred<T, U>::value> {};
 
-template <template <typename, typename> typename BinaryOp,
+template <template <typename, typename> typename BinaryPred,
           typename T,
           typename ...Ts>
-struct pack_commutative_binary_compliance<BinaryOp, T, Ts...> {
+struct pack_commutative_binary_compliance<BinaryPred, T, Ts...> {
   constexpr static bool value =
-    (true && ... && (BinaryOp<T, Ts>::value))
-    && pack_commutative_binary_compliance<BinaryOp, Ts...>::value;
+    (true && ... && (BinaryPred<T, Ts>::value))
+    && pack_commutative_binary_compliance<BinaryPred, Ts...>::value;
 };
 
-template <template <typename, typename> typename BinaryOp,
+template <template <typename, typename> typename BinaryPred,
           typename ...Ts>
 constexpr inline bool pack_commutative_binary_compliance_v =
-  pack_commutative_binary_compliance<BinaryOp, Ts...>::value;
+  pack_commutative_binary_compliance<BinaryPred, Ts...>::value;
 
 // -- pack_is_unique
 
@@ -354,6 +423,20 @@ struct pack_is_unique {
 
 template <typename ...Ts>
 constexpr inline bool pack_is_unique_v = pack_is_unique<Ts...>::value;
+
+// -- pack_has_match
+
+template <template <typename> typename Pred, typename ...Ts>
+struct pack_has_match {
+  constexpr static bool value = (false || ... || Pred<Ts>::value);
+};
+
+// -- pack_does_contain
+
+template <typename A, typename ...Ts>
+struct pack_does_contain {
+  constexpr static bool value = (false || ... || std::is_same_v<A, Ts>);
+};
 
 }  // namespace tpp
 
