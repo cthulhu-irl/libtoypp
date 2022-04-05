@@ -87,13 +87,7 @@ class optional {
   }
 
   constexpr bool has_value() const noexcept {
-    return std::visit(
-      optional_detail::overloaded{
-        [](nullopt_t) { return false; },
-        [](const T&) { return true; }
-      },
-      value_
-    );
+    return std::holds_alternative<nullopt_t>(value_);
   }
 
   constexpr       T&  value() &       noexcept { return std::get<T>(value_); }
