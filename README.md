@@ -39,6 +39,6 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - Functional
   - [ ] Maybe (something like std::optional)
   - [ ] Either (something like tl::expected)
-  - [ ] Compose
+  - [x] Compose
   - [ ] Always
 
