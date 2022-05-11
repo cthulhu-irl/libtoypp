@@ -1,8 +1,8 @@
 #ifndef TOYPP_FLATMAP_HPP_
 #define TOYPP_FLATMAP_HPP_
 
-namespace tpp {
-
+#include <iterator>
+#include <type_traits>
 #include <algorithm>
 #include <map>
 #include <unordered_map>
@@ -10,6 +10,9 @@ namespace tpp {
 #include <tuple>
 #include <optional>
 #include <utility>
+#include <stdexcept>
+
+namespace tpp {
 
 template <typename Key,
           typename Value,
@@ -21,25 +24,27 @@ class FlatMap {
   struct SearchResult final { bool found = false; std::size_t index = 0; };
 
  public:
-  using value_type = decltype(std::declval<Container>()[std::declval<std::size_t>()]);
+  using key_type = Key;
+  using mapped_type = Value;
+  using value_type = typename Container::value_type;
 
   constexpr FlatMap() noexcept {}
 
   constexpr void reserve(std::size_t n) { container_.reserve(n); }
 
-  constexpr Value* at(const Key& key) {
+  constexpr Value* at(const Key& key) noexcept {
     const auto res = binary_search(container_, key);
     if (!res.found) return nullptr;
     return std::addressof(container_[res.index].second);
   }
 
-  constexpr const Value& at(const Key& key) const {
+  constexpr const Value* at(const Key& key) const noexcept {
     const auto res = binary_search(container_, key);
     if (!res.found) return nullptr;
     return std::addressof(container_[res.index].second);
   }
 
-  constexpr bool insert(Key key, Value value, bool can_override = true) {
+  constexpr bool insert(Key key, Value value, bool can_override = false) {
     const auto res = binary_search(container_, key);
     if (res.found) {
       if (!can_override) return false;
@@ -47,28 +52,44 @@ class FlatMap {
       return true;
     }
 
-    container_.push_back({std::move(key), std::move(value)});
+    container_.emplace_back(std::move(key), std::move(value));
 
     // rotate to the right by 1.
-    std::rotate(std::rbegin(container_),
-                std::rbegin(container_) + 1,
-                std::rbegin(container_) + (std::size(container_) - res.index));
+    std::rotate(std::begin(container_) + res.index,
+                std::begin(container_) + (std::size(container_) - 1),
+                std::end(container_));
 
     return true;
+  }
+
+  constexpr bool insert_or_assign(Key key, Value value) {
+    return insert(std::move(key), std::move(value), true);
   }
 
   constexpr bool remove(const Key& key) {
     const auto res = binary_search(container_, key);
     if (!res.found) return false;
 
-    // rotate to the right by 1.
-    std::rotate(std::rbegin(container_),
-                std::rbegin(container_) + 1,
-                std::rbegin(container_) + (std::size(container_) - res.index));
+    // rotate to the left by 1.
+    std::rotate(std::begin(container_) + res.index,
+                std::begin(container_) + res.index + 1,
+                std::end(container_));
 
     container_.pop_back();
 
     return true;
+  }
+
+  constexpr Value& operator[](const Key& key) noexcept {
+    const auto res = binary_search(container_, key);
+    if (!res.found)
+      insert(key, Value{});
+
+    return container_[res.index].second;
+  }
+
+  constexpr const Value& operator[](const Key& key) const noexcept {
+    return at(key);
   }
 
  private:
