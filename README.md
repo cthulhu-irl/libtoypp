@@ -6,6 +6,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [x] Curry
 
  - [x] Array (static size)
+ - [x] FlatMap
 
  - [x] Math (simple stuff)
  - [x] Matrix (static size)
@@ -17,7 +18,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [ ] TripleBuffer
  - [ ] RingBuffer
 
- - [x] UniquePtr
+ - [x] UniquePtr (`UniquePtr<T[], Deleter>` isn't implemented yet.)
  - [ ] SharedPtr
 
  - [ ] VariantArray (static size, dynamically allocated)
