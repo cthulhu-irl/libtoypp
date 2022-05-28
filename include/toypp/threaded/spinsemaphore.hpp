@@ -1,5 +1,5 @@
-#ifndef TOYPP_THREADED_SEMAPHORE_HPP_
-#define TOYPP_THREADED_SEMAPHORE_HPP_
+#ifndef TOYPP_THREADED_SPINSEMAPHORE_HPP_
+#define TOYPP_THREADED_SPINSEMAPHORE_HPP_
 
 #include <atomic>
 #include <thread>
@@ -7,7 +7,7 @@
 namespace tpp {
 
 template <std::size_t MaxCount = 0>
-class Semaphore {
+class SpinSemaphore {
  public:
   static const std::size_t max;
 
@@ -15,8 +15,8 @@ class Semaphore {
   std::atomic<int> count_;
 
  public:
-  Semaphore() : count_(max) {}
-  Semaphore(const Semaphore&) = delete;
+  SpinSemaphore() : count_(max) {}
+  SpinSemaphore(const SpinSemaphore&) = delete;
 
   void acquire() noexcept {
     auto current = count_.load();
@@ -28,9 +28,9 @@ class Semaphore {
 };
 
 template <std::size_t MaxCount>
-const std::size_t Semaphore<MaxCount>::max =
+const std::size_t SpinSemaphore<MaxCount>::max =
     MaxCount ? MaxCount : std::thread::hardware_concurrency();
 
 }  // namespace tpp
 
-#endif  // TOYPP_THREADED_SEMAPHORE_HPP_
+#endif  // TOYPP_THREADED_SPINSEMAPHORE_HPP_
