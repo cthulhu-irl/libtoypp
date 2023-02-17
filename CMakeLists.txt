@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.8)
 
+include("cmake/setup_vcpkg.cmake")
+
 project(libtoypp CXX)
 
-set(CMAKE_CXX_STANDARD, 17)
-
-include("cmake/setup_vcpkg.cmake")
+set(CMAKE_CXX_STANDARD 17)
 
 option(LIBTOYPP_OPT_GENERATE_DOCS "Generate documentation"  FALSE)
 option(LIBTOYPP_OPT_BUILD_TEST "Build and perform tests" TRUE)
-option(LIBTOYPP_OPT_INSTALL "Generate and install libtoypp target" TRUE)
+option(LIBTOYPP_OPT_COVERAGE "Add coverage" FALSE)
 
 # Add the cmake folder so the FindSphinx module is found
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
@@ -25,7 +25,7 @@ target_include_directories(
 )
 
 if(LIBTOYPP_OPT_GENERATE_DOCS)
-#  add_subdirectory("docs")
+  add_subdirectory("docs")
 endif()
 
 if(LIBTOYPP_OPT_BUILD_TEST)
@@ -33,7 +33,3 @@ if(LIBTOYPP_OPT_BUILD_TEST)
   add_subdirectory("tests")
 endif()
 
-if(LIBTOYPP_OPT_INSTALL)
-endif()
-
-#add_subdirectory("examples")
