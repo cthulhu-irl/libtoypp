@@ -14,7 +14,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [x] Dynamic Square Matrix (n * n)
 
  - [ ] Buffer
- - [ ] DoubleBuffer
+ - [x] DoubleBuffer
  - [ ] TripleBuffer
  - [ ] RingBuffer
 
