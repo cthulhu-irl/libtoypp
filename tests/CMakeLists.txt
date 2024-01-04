@@ -3,8 +3,10 @@ cmake_minimum_required(VERSION 3.8)
 add_executable(tests)
 
 target_sources(tests PRIVATE
+    queue.cpp
     uniqueptr.cpp
-    threaded_doublebuffer.cpp)
+    threaded_doublebuffer.cpp
+    threaded_queue.cpp)
 
 target_compile_features(tests PRIVATE cxx_std_17)
 

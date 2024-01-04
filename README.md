@@ -28,7 +28,7 @@ This codebase is my playground to make stuff I like... or in summary: toy coding
  - [ ] String
  - [ ] DynamicVector
 
- - [ ] Queue
+ - [x] Queue / MTQueue (thread-safe)
  - [ ] Deque
  - [ ] PriorityQueue
 
