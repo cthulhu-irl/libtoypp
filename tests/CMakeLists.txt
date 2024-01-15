@@ -6,7 +6,8 @@ target_sources(tests PRIVATE
     queue.cpp
     uniqueptr.cpp
     threaded_doublebuffer.cpp
-    threaded_queue.cpp)
+    threaded_queue.cpp
+    threaded_spsc_ringbuffer.cpp)
 
 target_compile_features(tests PRIVATE cxx_std_17)
 
