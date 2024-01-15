@@ -2,6 +2,7 @@
 
 This codebase is my playground to make stuff I like... or in summary: toy coding in c++...
 
+ - [x] Span
  - [x] Range
  - [x] Curry
 
